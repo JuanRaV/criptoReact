@@ -1,6 +1,8 @@
-import { useState } from "react"
+import { useState,useEffect } from "react"
 import styled from "@emotion/styled"
 import Formulario from "./components/Formulario"
+import Resultado from "./components/Resultado"
+import Spinner from "./components/Spinner"
 import ImagenCripto from './img/imagen-criptos.png'
 
 //Creacion de Styled Components
@@ -42,6 +44,28 @@ const Heading = styled.h1`
 
 const App = () => {
   const [monedas,setMonedas]= useState({})
+  const [resultado,setResultado] = useState({})
+  const [cargando,setCargando] = useState(false)
+
+  //Escuchamos por los cambios que suceden en monedas
+  useEffect(()=>{
+    //Revisamos que el objeto tenga algo
+    if(Object.keys(monedas).length>0){
+      const cotizarCripto = async()=>{
+        const {criptomoneda,moneda} = monedas
+          setCargando(true)
+          setResultado({})
+          const url =`https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${criptomoneda}&tsyms=${moneda}`
+          const respuesta = await fetch(url)
+          const resultado = await respuesta.json()
+          setResultado(resultado.DISPLAY[criptomoneda][moneda])
+          setCargando(false)
+        
+      }
+      cotizarCripto()
+    }
+    
+  },[monedas])
   return (
       <Contenedor>
         <Imagen
@@ -53,6 +77,12 @@ const App = () => {
           <Formulario
             setMonedas={setMonedas}
           />
+          {/* Cargamos el componente unicamnete cuando hay informacion */}
+          {cargando && <Spinner/>}
+          {resultado.PRICE && <Resultado 
+              resultado={resultado}
+            />
+          }
         </div>
          
       </Contenedor>
